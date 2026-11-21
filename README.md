@@ -21,16 +21,16 @@ Priyom is an unofficial plugin for [SDR++](https://github.com/AlexandreRouma/SDR
 
 ## Interface
 
-| Column | Function | Default width |
-|---|---|---:|
-| Station | Station identifier and link to the Priyom station page | 100 px |
-| kHz / mode | Transmit frequency, modulation and click-to-tune | 125 px |
-| QTH | Country name and flag when available | 100 px |
-| UTC | Scheduled start time; click for the station schedule | 70 px |
-| Starts in | Live countdown until the broadcast | 80 px |
-| Auto | Arm or disarm automatic tuning for that entry | 40 px |
+| Column | Function |
+|---|---|
+| Station | Station identifier and link to the Priyom station page |
+| kHz / mode | Transmit frequency, modulation and click-to-tune |
+| QTH | Country name and flag when available |
+| UTC | Scheduled start time; click for the station schedule |
+| Starts in | Live countdown until the broadcast |
+| Auto | Arm or disarm automatic tuning for that entry |
 
-The total default column width is **515 px**, with a **10 px initial margin** on each side of the table at 100% display scaling. These are **defaults, not fixed limits**: window and column sizes can be changed and saved. The default floating window size is **542 × 320 px**.
+The table and floating window can be resized freely, with layout preferences saved automatically.
 
 ## Installation
 
@@ -44,21 +44,7 @@ The total default column width is **515 px**, with a **10 px initial margin** on
 
 ## Configuration
 
-Configuration is stored in **`priyom.ini` next to `sdrpp.exe`**, not scattered across multiple user-profile files. Example:
-
-```ini
-[Window]
-width=542
-height=320
-opacity=90
-
-[Table]
-sidebar=100,125,100,70,80,40
-floating=100,125,100,70,80,40
-
-[AutoTune]
-global_auto=1
-```
+Configuration is stored in **`priyom.ini` next to `sdrpp.exe`**, not scattered across multiple user-profile files. It contains window and table preferences, opacity and automatic-tuning settings.
 
 The plugin also stores individually armed transmissions under `[AutoTune]`. If no `priyom.ini` is present, V2.3 attempts to import previous settings once from `%LOCALAPPDATA%\SDRpp\Priyom\` and then uses the new file exclusively. For manual edits, close SDR++ first.
 
