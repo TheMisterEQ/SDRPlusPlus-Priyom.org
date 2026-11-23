@@ -17,6 +17,15 @@ jobs:
       - name: Check out project
         uses: actions/checkout@v4
 
+      - name: Save complete source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: Priyom-V2.4-Sources
+          path: |
+            source/
+            README.md
+            README_EN.md
+
       - name: Run search-filter regression tests
         run: |
           cat > /tmp/priyom_search_test.cpp <<'CPP'
@@ -52,10 +61,18 @@ jobs:
 
       - name: Build EN and PL Windows x64 DLLs
         run: |
-          python3 source/build.py --lang en
-          python3 source/build.py --lang pl
+          set -o pipefail
+          python3 source/build.py --lang en 2>&1 | tee /tmp/priyom_build.log
+          python3 source/build.py --lang pl 2>&1 | tee -a /tmp/priyom_build.log
           test -s source/build_en/priyom.dll
           test -s source/build_pl/priyom.dll
+
+      - name: Upload compiler diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Priyom-V2.4-Compiler-Log
+          path: /tmp/priyom_build.log
 
       - name: Package English and Polish editions
         run: |
