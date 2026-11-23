@@ -1,0 +1,115 @@
+name: Build and publish Priyom V2.4
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/publish-priyom-v2.4.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v4
+
+      - name: Run search-filter regression tests
+        run: |
+          cat > /tmp/priyom_search_test.cpp <<'CPP'
+          #include "priyom_filter.h"
+          int main() {
+              priyom::Event e={};
+              e.utc=16*3600+45*60;
+              e.hz=10446000.0;
+              priyom::cp(e.station,sizeof(e.station),"M12");
+              priyom::cp(e.mode,sizeof(e.mode),"CW");
+              if (!priyom::filter_match_event(e,"M12, CW, 10446kHz, 16:30-17:00","Polska"))return 1;
+              if (!priyom::filter_match_event(e,"16:30-17:00, 10446kHz, CW, M12","Poland"))return 2;
+              if (!priyom::filter_match_event(e,"Polska, 16:30-17:00, M12","Polska"))return 3;
+              if (!priyom::filter_match_event(e,"Poland, M12, CW","Poland"))return 4;
+              if (priyom::filter_match_event(e,"Poland, M12","Polska"))return 5;
+              if (priyom::filter_match_event(e,"Poland",nullptr))return 6;
+              if (!priyom::filter_match_event(e,"16:45","Poland"))return 7;
+              if (priyom::filter_match_event(e,"16:30","Poland"))return 8;
+              if (priyom::filter_match_event(e,"16:00-16:30","Poland"))return 9;
+              if (priyom::filter_match_event(e,"10447kHz","Poland"))return 10;
+              if (!priyom::filter_match_event(e,"3000-11000 kHz","Poland"))return 11;
+              if (priyom::filter_match_event(e,"3000-10000","Poland"))return 12;
+              if (!priyom::filter_match_event(e,"M12 CW","Poland"))return 13;
+              if (!priyom::filter_match_event(e,"United States","United States"))return 14;
+              e.utc=23*3600+45*60;
+              if (!priyom::filter_match_event(e,"23:30-01:00","Poland"))return 15;
+              if (priyom::filter_match_event(e,"01:00-23:30","Poland"))return 16;
+              return 0;
+          }
+          CPP
+          clang++ -std=c++17 -Wall -Wextra -Wno-unused-function -Isource /tmp/priyom_search_test.cpp -o /tmp/priyom_search_test
+          /tmp/priyom_search_test
+
+      - name: Build EN and PL Windows x64 DLLs
+        run: |
+          python3 source/build.py --lang en
+          python3 source/build.py --lang pl
+          test -s source/build_en/priyom.dll
+          test -s source/build_pl/priyom.dll
+
+      - name: Package English and Polish editions
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/priyom-en /tmp/priyom-pl
+          git archive HEAD source README.md README_EN.md | tar -xf - -C /tmp/priyom-en
+          git archive HEAD source | tar -xf - -C /tmp/priyom-pl
+          cp source/build_en/priyom.dll /tmp/priyom-en/priyom.dll
+          cp source/build_pl/priyom.dll /tmp/priyom-pl/priyom.dll
+          cat > /tmp/priyom-pl/README_PL.md <<'DOC'
+          # Priyom V2.4 - wersja polska
+
+          Plugin do SDR++ 1.3.2 Windows x64, z harmonogramem Priyom.org, QTH, automatycznym strojeniem i zegarem UTC.
+
+          ## Wyszukiwanie
+          Warunki oddziel przecinkami, w dowolnej kolejnosci. Wszystkie musza pasowac jednoczesnie (AND).
+
+          - M12, CW, 10446khz, 16:30-17:00 - stacja, modulacja, czestotliwosc i przedzial startu UTC.
+          - M12, Polska, 16:30-17:00 - stacja, kraj QTH i przedzial UTC.
+          - 16:30 - transmisje rozpoczynajace sie o 16:30 UTC.
+          - 3000-10000 kHz - zakres czestotliwosci.
+          - Polska - kraj QTH podany przez Priyom.
+
+          Wyszukiwanie po kraju obejmuje tylko stacje, ktorym Priyom przypisuje kraj. QTH nie musi oznaczac miejsca fizycznego nadajnika. Przedzial czasu moze przechodzic przez polnoc.
+
+          ## Instalacja
+          Zamknij SDR++, nastepnie skopiuj priyom.dll do folderu modules, zastepujac poprzedni. Uruchom SDR++ ponownie. Zachowaj kopie priyom.ini. Pozostale funkcje wersji V2.3 sa zachowane.
+
+          ## Kompilacja
+          Python 3 i LLVM clang/lld-link: python source/build.py --lang pl
+          DOC
+          (cd /tmp/priyom-en && zip -q -r "$GITHUB_WORKSPACE/Priyom_V2.4_EN_Windows_x64.zip" README.md README_EN.md priyom.dll source)
+          (cd /tmp/priyom-pl && zip -q -r "$GITHUB_WORKSPACE/Priyom_V2.4_PL_Windows_x64.zip" README_PL.md priyom.dll source)
+          cp source/build_en/priyom.dll priyom.dll
+
+      - name: Save Polish edition for download
+        uses: actions/upload-artifact@v4
+        with:
+          name: Priyom-V2.4-PL-Windows-x64
+          path: Priyom_V2.4_PL_Windows_x64.zip
+          retention-days: 7
+
+      - name: Publish English DLL to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add priyom.dll
+          git diff --cached --quiet || git commit -m "Build Priyom V2.4 English Windows x64 DLL"
+          git push origin HEAD:main
+
+      - name: Publish English V2.4 release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v2.4 priyom.dll Priyom_V2.4_EN_Windows_x64.zip \
+            --title "Priyom V2.4 - English (Windows x64)" \
+            --notes "Enhanced client-side search: combine station, modulation, frequency, QTH country and UTC time/time range using comma-separated AND filters, in any order. Existing features are unchanged. Requires a compatible SDR++ 1.3.2 Windows x64 build."

@@ -1,4 +1,4 @@
-// Priyom 2.3 interface strings. Keep the actual Priyom QTH source data
+// Priyom 2.4 interface strings. Keep the actual Priyom QTH source data
 // unchanged; the Polish build translates known country display names only.
 #pragma once
 #ifndef PRIYOM_LANG_EN
@@ -12,7 +12,7 @@
 #define PRIYOM_AUTO_TUNE "Automatic tuning"
 #define PRIYOM_TOOLTIP_MASTER "Master automatic tuning switch.\nDoes not change individual Auto selections.\nClicking a frequency still tunes manually."
 #define PRIYOM_TOOLTIP_CLOCK "%s\nClick to open main Priyom.org schedule"
-#define PRIYOM_SEARCH_HINT "Search: E11, USB, 3756, 3000-10000 kHz"
+#define PRIYOM_SEARCH_HINT "Search: M12, CW, 10446kHz, Poland, 16:30-17:00 (UTC)"
 #define PRIYOM_HIDE_WINDOW "Hide window"
 #define PRIYOM_SHOW_WINDOW "Show window"
 #define PRIYOM_TOOLTIP_AUTO "Automatically tune selected transmissions"
@@ -34,7 +34,7 @@ static const char*priyom_display_country(const char*country){return country?coun
 #define PRIYOM_AUTO_TUNE "Automatyczne strojenie"
 #define PRIYOM_TOOLTIP_MASTER "Globalny wlacznik automatycznego strojenia.\nNie zmienia zaznaczonych emisji Auto.\nKlikniecie czestotliwosci nadal stroi recznie."
 #define PRIYOM_TOOLTIP_CLOCK "%s\nKliknij, aby otworzyc glowny harmonogram Priyom.org"
-#define PRIYOM_SEARCH_HINT "Szukaj: E11, USB, 3756, 3000-10000 kHz"
+#define PRIYOM_SEARCH_HINT "Szukaj: M12, CW, 10446kHz, Polska, 16:30-17:00 (UTC)"
 #define PRIYOM_HIDE_WINDOW "Ukryj okno"
 #define PRIYOM_SHOW_WINDOW "Pokaz okno"
 #define PRIYOM_TOOLTIP_AUTO "Automatyczne strojenie zaznaczonych emisji"

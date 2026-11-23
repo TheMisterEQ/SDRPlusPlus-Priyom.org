@@ -890,7 +890,8 @@ static priyom::i64 g_ui_rows_second=-1;
 static unsigned g_ui_filter_revision=~0u;
 static void update_ui_cache(priyom::i64 now){
     int qgeneration=__atomic_load_n(&g_qth_generation,__ATOMIC_ACQUIRE);
-    if(qgeneration!=g_ui_qth_generation){
+    const bool qth_changed=qgeneration!=g_ui_qth_generation;
+    if(qth_changed){
         AcquireSRWLockShared(&g_lock);
         g_ui_qth_count=g_qth_count;
         for(int i=0;i<g_qth_count;i++)g_ui_qth[i]=g_qth_catalog[i];
@@ -905,10 +906,13 @@ static void update_ui_cache(priyom::i64 now){
         for(int i=0;i<g_count;i++)g_ui_snapshot[i]=g_events[i];
         ReleaseSRWLockShared(&g_lock);
     }
-    if(generation!=g_ui_generation||now!=g_ui_rows_second||g_filter_revision!=g_ui_filter_revision){
+    if(generation!=g_ui_generation||qth_changed||now!=g_ui_rows_second||g_filter_revision!=g_ui_filter_revision){
         g_ui_row_count=0;
         for(int i=0;i<g_ui_snapshot_count&&g_ui_row_count<1024;i++){
-            if(g_ui_snapshot[i].utc>now-60&&priyom::filter_match_event(g_ui_snapshot[i],g_station_filter))
+            const priyom::Event& e=g_ui_snapshot[i];
+            const char* qth=priyom::qth::find(g_ui_qth,g_ui_qth_count,e.station);
+            if(e.utc>now-60&&priyom::filter_match_event(e,g_station_filter,
+                    qth?priyom_display_country(qth):nullptr))
                 g_ui_rows[g_ui_row_count++]=i;
         }
         g_ui_generation=generation;g_ui_rows_second=now;g_ui_filter_revision=g_filter_revision;
@@ -1191,7 +1195,7 @@ void* operator new(usize,void*p) noexcept{return p;}
 void operator delete(void*) noexcept{}
 void operator delete(void*,usize) noexcept{}
 extern "C" {int _fltused=0;}
-EXPORT const ModuleManager::ModuleInfo_t _INFO_={"Priyom","Priyom station schedules, UTC clock/countdown, global/per-event auto-tune","OpenAI",2,3,0,1};
+EXPORT const ModuleManager::ModuleInfo_t _INFO_={"Priyom","Priyom station schedules, UTC clock/countdown, global/per-event auto-tune","OpenAI",2,4,0,1};
 EXPORT void _INIT_(){
     g_supported=supported_core();if(!g_supported)return;
     resolve_optional_imgui();
