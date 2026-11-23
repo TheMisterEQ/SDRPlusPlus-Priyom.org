@@ -561,7 +561,7 @@ static bool armed(const priyom::Key&k){for(int i=0;i<g_armed_count;i++)if(priyom
 static void save_ini(){
     if(!g_ini_path[0])return;
     char*buf=g_settings_write_buf;buf[0]=0;
-    append(buf,60000,"; SDR++ Priyom V2.3 - all plugin settings in one file\r\n");
+    append(buf,60000,"; SDR++ Priyom V2.4 - all plugin settings in one file\r\n");
     append(buf,60000,"[Window]\r\nwidth=");
     append_int(buf,60000,(unsigned)(g_floating_size.x+0.5f));
     append(buf,60000,"\r\nheight=");

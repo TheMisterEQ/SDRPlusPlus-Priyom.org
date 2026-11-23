@@ -26,6 +26,13 @@ jobs:
             README.md
             README_EN.md
 
+      - name: Install LLVM linker
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y lld
+          command -v lld-link
+          command -v clang
+
       - name: Run search-filter regression tests
         run: |
           cat > /tmp/priyom_search_test.cpp <<'CPP'
@@ -128,5 +135,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create v2.4 priyom.dll Priyom_V2.4_EN_Windows_x64.zip \
+            --target "$(git rev-parse HEAD)" \
             --title "Priyom V2.4 - English (Windows x64)" \
             --notes "Enhanced client-side search: combine station, modulation, frequency, QTH country and UTC time/time range using comma-separated AND filters, in any order. Existing features are unchanged. Requires a compatible SDR++ 1.3.2 Windows x64 build."
